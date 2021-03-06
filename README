@@ -1,0 +1,93 @@
+Diaconu Maria-Loredana, 325CA
+
+In realizarea temei, am utilizat scheletul oferit, pe care l-am reorganizat astfel 
+incat implementarile pentru IntersectionHandler specifice fiecarui task sa se afle
+in pachetul intersectionHandlers, in clase separate, cele pentru ReaderHandler ->
+readerHandlers, iar variabilele si elementele de sincronizare utilizate pentru
+fiecare intersectie se afla in pachetul intersections.
+
+[Task 1]. simple_semaphore
+    Fiecare masina ajunge la semafor, asteapta timpul corespunzator si iese
+    din intersectie.
+
+[Task 2]. simple_n_roundabout
+    Pentru acest task este nevoie de un semafor (vectorul de semafoare din
+    SimpleNRoundaboutHandler este de lungime 1), ce lasa sa treaca maxim n
+    masini.
+    Masina ajunge la intersectie, da acquire la semafor si asteapta un timp
+    in intersectie. Apoi, iese din intersectie si da release.
+    
+[Task 3]. simple_strict_1_car_roundabout
+    Aceasta intersectie este caz particular de simple_n_roundabout. In
+    rezolvare am utilizat n semafoare (pentru fiecare banda), care lasa sa
+    treaca o singura masina.
+
+[Task 4]. simple_strict_x_car_roundabout
+    Utilizez o bariera la care trebuie sa astepte toate masinile pentru a ma
+    asigura ca toate au ajuns la intersectie inainte de a continua.
+    Avem de aceasta data nevoie de n semafoare ce lasa sa treaca cate x masini
+    (maxim x pe fiecare dintre cele n benzi).
+    Pentru a ma asigura ca intra STRICT x masini de pe fiecare din cele n benzi,
+    am utilizat o bariera(n*x) ce garanteaza selectarea in chunk-uri de cate n*x 
+    a masinilor ce trebuie sa intre in intersectie.
+    Odata selectate, masinile intra in intersectie si asteapta si ies. Utilizand
+    aceeasi bariera de n*x, abia dupa ce ies toate pot sa intre altele.
+
+
+[Task 5]. simple_max_x_car_roundabout
+    Aceasta intersectie este caz particular de simple_strict_1_car_roundabout.
+    De aceasta data, in loc sa poata trece prin intersectie cate o masina de pe
+    fiecare banda, pot trece maxim x masini de pe fiecare din cele n benzi.
+    Am rezolvat folosind tot un array de n semafoare, cu cate x elemente.
+
+[Task 6]. priority_intersection
+    Masinile ajung in intersectie dupa un timp.
+    Utilizez un counter in PriorityIntersection pentru numarul de masini care
+    se afla la un moment dat in intersectie. Acestea pot fi doar masini cu
+    prioritate, deoarece cele fara prioritate trec prin intersectie instantaneu.
+    Utilizez si o coada care retine ordinea in care au ajuns masinile fara prioritate
+    la intersectie.
+
+    Daca masina are prioritate, se incrementeaza counterul (am facut asta intr-un bloc
+    synchronized deoarece ++ nu este operatie atomica, dar putea fi rezolvat si cu AtomicInteger).
+    Se afiseaza mesajul ca masina se afla in intersectie. Masinii ii ia un timp sa treaca prin
+    intersectie, apoi afiseaza faptul ca a iesit, decrementeaza counterul si anunta celelalte masini
+    ca este cu o masina mai putin in intersectie.
+
+    Daca masina nu are prioritate, este pusa in asteptare intr-un queue. Masina asteapta cat timp 
+    counterul nu este 0. Odata ce s-a facut 0, este extrasa din coada masina ce astepta de cel mai
+    mult timp si aceasta trece prin intersectie.
+
+[Task 7]. crosswalk
+    Pentru rezolvarea acestui task a fost suficienta clasa Pedestrians.
+    Am adaugat in clasa Car atributul prevColor ce retine ultima culoare a semaforului, deoarece
+    mesajele trebuiesc afisate doar cand aceasta se schimba.
+    Cat timp mai pot sa treaca pietoni:
+        * daca in acel moment trec pietoni, daca semaforul nu avea deja culoarea rosie, este afisat
+          mesajul si semaforul se face rosu.
+        * daca nu trec pietoni, daca semaforul nu avea deja culoarea verde, este afisat mesajul si
+          semaforul se face verde.
+    La final, dupa ce trec toti pietonii, masinile trebuie sa treaca si ele.
+
+[Task 8]. simple_maintenance
+    Am utilizat variabilele allowed (poate avea valorile 0 si 1, daca au voie sa treaca masini din
+    sensurile 0, respectiv 1), passed0 si passed1 (care numara cate masini din fiecare sens au trecut).
+
+    Daca masina vine din sensul 0, asteapta cat timp allowed = 1 (cat timp sunt permise doar masinile
+    din sensul 1). 
+    Cand devin permise masinile de pe sensul sau, se deplaseaza si incrementeaza passed0. Daca au trecut
+    deja x masini din sensul 0, passed0 se reseteaza si acum vor fi permise doar masinile din celalalt sens.
+    Toate celelalte masini sunt anuntate pentru a verificat valoarea lui allowed.
+
+    Functionarea este identica si pentru sensul 1.
+
+[Task 9]. complex_maintenance
+    Prea complex.
+
+[Task 10]. railroad
+    Este, din nou, utilizata o coada pentru a mentine ordinea masinilor si o bariera pentru toate masinile.
+    Masinile asteapta la bariera. Mesajul este printat si acestea sunt puse in coada intr-un bloc
+    synchronized pentru a evita race condition.
+    Dupa ce au ajuns toate la bariera, masina 0 printeaza faptul ca trenul a trecut. Este folosita din nou
+    bariera pentru a ne asigura ca toate au trecut de acest mesaj.
+    In continuare, este scoasa cate o masina din queue de fiecare thread pentru a respecta ordinea.
